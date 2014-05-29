@@ -1,76 +1,35 @@
+
+var fs = require('fs');
+
 module.exports = {
-    book: {
-        assets: "./book",
-        js: [
-            "test.js"
-        ],
-        css: [
-            "test.css"
-        ],
-        html: {
-            "html:start": function() {
-                return "<!-- Start book "+this.options.title+" -->"
-            },
-            "html:end": function() {
-                return "<!-- End of book "+this.options.title+" -->"
-            },
 
-            "head:start": "<!-- head:start -->",
-            "head:end": "<!-- head:end -->",
+    book: {}, // we should be able to leave this out, but we get a
+    // "Cannot read property 'html' of undefined" error
 
-            "body:start": "<!-- body:start -->",
-            "body:end": "<!-- body:end -->"
-        }
-    },
     hooks: {
         // For all the hooks, this represent the current generator
 
-        // This is called before the book is generated
-        "init": function() {
-            console.log("init!");
-        },
-
-        // This is called after the book generation
-        "finish": function() {
-            console.log("finish!");
-        },
-
         // The following hooks are called for each page of the book
         // and can be used to change page content (html, data or markdown)
-
 
         // Before parsing markdown
         "page:before": function(page) {
             // page.path is the path to the file
             // page.content is a string with the file markdown content
-
-            // Example:
-            //page.content = "# Title\n" + page.content;
-
-            return page;
-        },
-
-        // Before html generation
-        "page": function(page) {
-            // page.path is the path to the file
-            // page.content is a list of parsed sections
-
-            // Example:
-            //page.content.unshift({type: "normal", content: "<h1>Title</h1>"})
-
-            return page;
-        },
-
-        // After html generation
-        "page:after": function(page) {
-            // page.path is the path to the file
-            // page.content is a string with the html output
-
-            // Example:
-            //page.content = "<h1>Title</h1>\n" + page.content;
-            // -> This title will be added before the html tag so not visible in the browser
-
-            return page;
+	    
+	    // use multiline flag to grok every line, and global flag to 
+	    // find all matches -- finds '' and "" filenames
+	    // -- add initial \s* to eat up whitespace?
+	    var re = /^!INCLUDE\s+(?:\"([^\"]+)\"|'([^']+)')\s*$/gm;
+	    // filename is first matching group
+	    page.content.replace(re, function(match, p1, p2) {
+		var filename = p1 || p2;
+		fs.readFile(filename, function(err, content) {
+		    if (err) throw err;
+		    page.content = content;
+		});
+	    });
+	    return page;
         }
     }
 };
