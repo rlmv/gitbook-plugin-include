@@ -1,7 +1,22 @@
 
 var path = require('path');
 var fs = require('fs');
+var async = require('async');
 var Q = require('q');
+
+// return a promise for a read file
+function readFile(file) {
+
+    var deferred = Q.defer();
+    fs.readFile(file, function(err, text) {
+	if (err) {
+	    deferred.reject(err);
+	} else {
+	    deferred.resolve(text);
+	}
+    });
+    return deferred.promise;
+}
 
 module.exports = {
 
@@ -9,14 +24,10 @@ module.exports = {
     // "Cannot read property 'html' of undefined" error
 
     hooks: {
-        // For all the hooks, this represent the current generator
 
-        // The following hooks are called for each page of the book
-        // and can be used to change page content (html, data or markdown)
-
-        // Before parsing markdown
         "page:before": function(page) {
-            // page.path is the path to the file
+            // page.raw is the path to the raw file
+	    // page.path is the path to the page in the gitbook
             // page.content is a string with the file markdown content
 
 	    // use multiline flag to grok every line, and global flag to 
@@ -24,28 +35,34 @@ module.exports = {
 	    // -- add initial \s* to eat up whitespace?
 	    var re = /^!INCLUDE\s+(?:\"([^\"]+)\"|'([^']+)')\s*$/gm;
 	    
-	    var dir = path.dirname(page.path);
+	    var dir = path.dirname(page.raw);
 
+	    var files = {};
+	    
+	    var promises = [];
 	    var res;
-	    var fnames = {};
-	    // capture all filenames
 	    while ((res = re.exec(page.content)) !== null) {
 
-		var filename = path.join(dirname, res[1] || res[2]);
-		fnames[filename] = null;
+		var filename = res[1] || res[2];
+		var filepath = path.join(dir, filename);
+		var promise = Q.nfcall(fs.readFile, filepath)
+		    // closure to save text by filename
+		    .then(function(filename) { 
+			return function(text) {
+			    files[filename] = text;
+			    return text;
+			}
+		    }(filename));
+		promises.push(promise);
 	    }
-		
-	    // read all files
-
-	    // replace !INCUDEs with file contents
-	    // filename is first matching group
-/*	    page.content = page.content.replace(re, function(match, p1, p2) {
-
-		Q.nfcall(fs.readFile, filename).done(function (text) {
-		    console.log(text);
-		});
-	    });*/
-	    return page;
+	    return Q.all(promises)
+		.then(function() {
+		    page.content = page.content.replace(re, function(match, p1, p2) {
+			console.log("including " + p1 || p2);
+			return files[p1 || p2];
+		    });
+		    return page;
+		})
         }
     }
 };
