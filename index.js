@@ -23,21 +23,24 @@ module.exports = {
 	    var dir = path.dirname(page.raw);
 
 	    var files = {};
-	    var promises = [];
+	    // returns a closure for saving the passed text
+	    var cacheFile = function(filename) {
+		return function(text) {
+		    files[filename] = text;
+		};
+	    };
 
 	    // find all !INCLUDE statements.
-	    // read and save files to include using promises
+	    // read and cache target files
 	    var res;
-	    while ((res = re.exec(page.content)) !== null) {
-
+	    while (res = re.exec(page.content)) {
+		
 		var filename = res[1] || res[2];
 		var filepath = path.join(dir, filename);
-		var promise = Q.nfcall(fs.readFile, filepath)
-		    // closure to save read text by filename
-		    .then(function(filename) { 
-			return function(text) { files[filename] = text; }
-		    }(filename));
-		promises.push(promise);
+		promises.push(
+		    Q.nfcall(fs.readFile, filepath)
+			.then(cacheFile(filename))
+		);
 	    }
 	    // once all files are read, replace !INCLUDE statements with 
 	    // appropriate file content
@@ -45,7 +48,7 @@ module.exports = {
 		.then(function() {
 		    page.content = page.content.replace(re, function(match, p1, p2) {
 			var filename = p1 || p2;
-			return files[filename].toString().trim();
+			return files[filename].toString().trim(); // strip whitespace
 		    });
 		    return page;
 		})
