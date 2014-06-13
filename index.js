@@ -30,6 +30,8 @@ module.exports = {
 		};
 	    };
 
+	    var readFiles = []; // file promises
+
 	    // find all !INCLUDE statements.
 	    // read and cache target files
 	    var res;
@@ -37,14 +39,14 @@ module.exports = {
 		
 		var filename = res[1] || res[2];
 		var filepath = path.join(dir, filename);
-		promises.push(
+		readFiles.push(
 		    Q.nfcall(fs.readFile, filepath)
 			.then(cacheFile(filename))
 		);
 	    }
 	    // once all files are read, replace !INCLUDE statements with 
 	    // appropriate file content
-	    return Q.all(promises)
+	    return Q.all(readFiles)
 		.then(function() {
 		    page.content = page.content.replace(re, function(match, p1, p2) {
 			var filename = p1 || p2;
