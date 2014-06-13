@@ -46,7 +46,7 @@ module.exports = {
 		    page.content = page.content.replace(re, function(match, p1, p2) {
 			var filename = p1 || p2;
 			console.log("INCLUDING " + filename);
-			return files[filename];
+			return files[filename].toString().trim();
 		    });
 		    return page;
 		})
