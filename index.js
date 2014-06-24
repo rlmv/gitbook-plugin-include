@@ -8,24 +8,23 @@ module.exports = {
     hooks: {
 
         "page:before": function(page) {
-            // page.raw is the path to the raw file
-	    // page.path is the path to the page in the gitbook
             // page.content is a string with the file markdown content
+	    // page.path is the path to the page in the gitbook
+            // page.rawPath is the path to the raw file
 
 	    // use multiline flag to grok every line, and global flag to 
 	    // find all matches -- finds '' and "" filenames
-	    // -- add initial \s* to eat up whitespace?
+	    // TODO: add initial \s* to eat up whitespace?
 	    var re = /^!INCLUDE\s+(?:\"([^\"]+)\"|'([^']+)')\s*$/gm;
 	    
 	    var dir = path.dirname(page.rawPath);
-	    // concatenate filename onto dir 
-	    // - the path from the gitbook binary to the target include
+	    // construct path from gitbook binary to target include
 	    var makePath = function(filename) {
 		return path.join(dir, filename);
 	    };
 	
 	    var files = {};
-	    // returns a closure for saving the passed text
+	    // return a closure for saving the passed text
 	    var cacheFile = function(filepath) {
 		return function(text) {
 		    files[filepath] = text;
