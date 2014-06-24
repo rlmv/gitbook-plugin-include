@@ -3,7 +3,7 @@
     "description": "Plugin for Gitbook which inserts external files into the books Markdown.",
     "author": "Bo Marchman <bo.marchman@gmail.com>",
     "main": "index.js",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "engines": {
         "gitbook": "*"
     },
