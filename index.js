@@ -40,11 +40,9 @@ module.exports = {
 	    // find all !INCLUDE statements.
 	    // read and cache target files
 	    var res;
-	    console.log(page.content);
 	    while (res = re.exec(page.content)) {
 		
 		var filepath = makePath(res[1] || res[2]);
-		console.log(filepath);
 		readFiles.push(
 		    Q.nfcall(fs.readFile, filepath)
 			.then(cacheFile(filepath))
