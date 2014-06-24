@@ -1,4 +1,4 @@
-# md-include Gitbook Plugin
+# gitbook-plugin-include
 
 Preprocess your Markdown files, replacing all instances of
 
@@ -13,7 +13,7 @@ with the contents of the specified file. The file can be a multi-level path.
 Add to your `book.json` plugin list:
 ```
 {
-    "plugins" : [ "md-include" ],
+    "plugins" : [ "include" ],
 }
 ```
 
