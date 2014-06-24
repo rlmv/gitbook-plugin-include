@@ -5,9 +5,6 @@ var Q = require('q');
 
 module.exports = {
 
-    book: {}, // we should be able to leave this out, but we get a
-    // "Cannot read property 'html' of undefined" error
-
     hooks: {
 
         "page:before": function(page) {
