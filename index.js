@@ -20,13 +20,18 @@ module.exports = {
 	    // -- add initial \s* to eat up whitespace?
 	    var re = /^!INCLUDE\s+(?:\"([^\"]+)\"|'([^']+)')\s*$/gm;
 	    
-	    var dir = path.dirname(page.raw);
-
+	    var dir = path.dirname(page.rawPath);
+	    // concatenate filename onto dir 
+	    // - the path from the gitbook binary to the target include
+	    var makePath = function(filename) {
+		return path.join(dir, filename);
+	    };
+	
 	    var files = {};
 	    // returns a closure for saving the passed text
-	    var cacheFile = function(filename) {
+	    var cacheFile = function(filepath) {
 		return function(text) {
-		    files[filename] = text;
+		    files[filepath] = text;
 		};
 	    };
 
@@ -35,13 +40,14 @@ module.exports = {
 	    // find all !INCLUDE statements.
 	    // read and cache target files
 	    var res;
+	    console.log(page.content);
 	    while (res = re.exec(page.content)) {
 		
-		var filename = res[1] || res[2];
-		var filepath = path.join(dir, filename);
+		var filepath = makePath(res[1] || res[2]);
+		console.log(filepath);
 		readFiles.push(
 		    Q.nfcall(fs.readFile, filepath)
-			.then(cacheFile(filename))
+			.then(cacheFile(filepath))
 		);
 	    }
 	    // once all files are read, replace !INCLUDE statements with 
@@ -49,8 +55,8 @@ module.exports = {
 	    return Q.all(readFiles)
 		.then(function() {
 		    page.content = page.content.replace(re, function(match, p1, p2) {
-			var filename = p1 || p2;
-			return files[filename].toString().trim(); // strip whitespace
+			var filepath = makePath(p1 || p2);
+			return files[filepath].toString().trim(); // strip whitespace
 		    });
 		    return page;
 		})
